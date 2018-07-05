@@ -1,1 +1,7 @@
 This change log details bug fixes, changes, and files added to this project.
+
+2018-07-05 06:50: First Commit: Added graphics files 
+
+2018-07-05 06:58: Created ./etc with stubs for License, Readme, Change.log, and Documention.
+
+2018-07-05 07:12: Updated the change.log to reflect the initial commits. Pushed these changes to origin/master.
