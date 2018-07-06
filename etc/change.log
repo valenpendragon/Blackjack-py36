@@ -11,3 +11,5 @@ This change log details bug fixes, changes, and files added to this project.
 2018-07-06 08:00: Created the Card class and its __init__() method. No testing of the method to see if it works yet.
 
 2018-07-06 08:30: Created Card.__str__() method. Fully tested the Card class methods to make sure that they work, including printing out a "hand".
+
+2018-07-06 09:00: Created SubClass Ace and its unique __init__() method. Fully tested this subclass, including using it in conditional statements. Commented the correct syntax to use when checking the type of card.

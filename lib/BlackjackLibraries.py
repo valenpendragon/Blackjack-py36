@@ -12,6 +12,7 @@ This is the principal Class library for Blackjack Games. These classes include:
             with additional entropy added to improve randomness.
 
     Class Hand: A grouping of cards dealt to players.
+        SubClass SplitHand: Handles the special methods unique to split hands.
         SubClass DealerHand: A hand specifically designed for the dealer.
 
     Class Player: Stores the hand(s), bet(s), and bank status of each player
@@ -77,3 +78,36 @@ class Card(object):
         the newline very specifically. It takes no arguments.
         """
         return "{0}-{1} ".format(self.rank, self.suit)
+
+
+class Ace(Card):
+    """
+    This class deals with the special case that a card is an Ace. Aces have two
+    possible values in Blackjack, 1 or 11. The value depends on whether or not
+    the dealer or player would bust if the Ace is considered an 11. This class
+    inherits __str__, but needs a separate __init__() method. In usage in game
+    programming, if statements, like this one?
+        if type(card) == Ace:
+    can used to separate Aces from the other cards when scoring hands, etc.
+
+    Unique Methods:
+        __init__: Adds an extra attribute reflecting an ace's second value.
+    """
+
+    # Methods:
+    def __init__(self, suit):
+        """
+        Aces only take a str value for suit. They take no other arguments.
+        INPUT: suit, string
+        """
+        suits = ('S', 'D', 'H', 'C')
+        if suit not in suits:
+            print(f"Card: An invalid suit was supplied {suit}.")
+            raise ValueError("Card objects must have a valid suit.") from None
+            return None
+
+        # A valid suit was supplied.
+        self.rank = 'A'
+        self.suit = suit
+        self.value = 1
+        self.higher_value = 11
