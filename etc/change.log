@@ -9,3 +9,5 @@ This change log details bug fixes, changes, and files added to this project.
 2018-07-05 13:30: Created BlackjackLibraries.py and started laying out in the docstring the major classes that will be needed for this attempt.
 
 2018-07-06 08:00: Created the Card class and its __init__() method. No testing of the method to see if it works yet.
+
+2018-07-06 08:30: Created Card.__str__() method. Fully tested the Card class methods to make sure that they work, including printing out a "hand".

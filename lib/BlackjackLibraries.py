@@ -70,3 +70,10 @@ class Card(object):
             # This is a face card.
             value = 10
         self.value = value
+
+    def __str__(self):
+        """
+        This method prints out the card in the format Rank-Suit. It suppresses
+        the newline very specifically. It takes no arguments.
+        """
+        return "{0}-{1} ".format(self.rank, self.suit)
