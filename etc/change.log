@@ -13,3 +13,5 @@ This change log details bug fixes, changes, and files added to this project.
 2018-07-06 08:30: Created Card.__str__() method. Fully tested the Card class methods to make sure that they work, including printing out a "hand".
 
 2018-07-06 09:00: Created SubClass Ace and its unique __init__() method. Fully tested this subclass, including using it in conditional statements. Commented the correct syntax to use when checking the type of card.
+
+2018-10-18 19:45: Created Class Deck with preamble. Created __init__() method, __len__() method, __str__() method, __del__() method, and remove_top() method. remove_top() removes the card at index 0 and returns it. All of these methods have been fully tested. Cleaned up notes on Classes Card and Ace. Added constants RANKS and SUITS.
