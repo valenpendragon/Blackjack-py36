@@ -155,16 +155,14 @@ class Deck(object):
     '''
     This class returns a 52-card shuffled deck consisting of 4 suits, and 13
     cards per suit, Ace through King.
-    INPUTS: None
-    OUTPUTS: None
 
     Methods:
         __init__: returns a shuffled deck of 52 cards. Takes no arguments.
         __str__: returns the string "A shuffled deck of {length} cards", where
             length is the length determined by the __len__ function below.
+            When invoked with diagnostic=True, prints the CardShoe.
         __len__: returns the number of cards remaining in the deck.
-        __del__: prints a deck deleted string.
-        deal_card: removes the card at index 0 and shifts the cards up one
+        remove_top: removes the card at index 0 and shifts the cards up one
             accordingly. This method takes no arguments.
     Attributes:
         shuffled_deck: the contents of the deck (a list of card objects
@@ -198,7 +196,7 @@ class Deck(object):
         # Next, we shuffle it using the rd.shuffle.
         rd.shuffle(deck)
 
-        # To get some additional entropy, we take this shuffled set of cards
+        # To add some additional entropy, we take this shuffled set of cards
         # and randomly remove them one at a time and put them in the actual
         # shuffled deck, self.shuffled_deck.
         self.shuffled_deck = []
@@ -212,7 +210,7 @@ class Deck(object):
         This method prints out the number of cards remaining in the Deck.
         object. It takes no arguments.
         INPUTS: None
-        OUTPUTS: lenght, integer
+        OUTPUTS: length, integer
         """
         return len(self.shuffled_deck)
 
@@ -233,15 +231,6 @@ class Deck(object):
             for card in self.shuffled_deck:
                 print(card)
 
-    def __del__(self):
-        """
-        Deletes the deck object and prints a message indicating it has been
-        deleted.
-        INPUTS: None
-        OUTPUTS: None
-        """
-        print("The current deck has been removed from the game.")
-
     def remove_top(self):
         """
         This mechod removes the card at index zero of the Deck object. This is
@@ -250,3 +239,49 @@ class Deck(object):
         OUTPUTS: card, Card type object
         """
         return self.shuffled_deck.pop(0)
+
+
+class CardShoe(Deck):
+    '''
+    This class uses the Deck class to create a CardShoe of up to 1 to 8 52 card
+    decks.
+
+    Unique Methods:
+        __init__: The creation method requires an argument indicating the
+            number of 52 card decks that will make up the CardShoe.
+
+    Inherited Methods:
+        __str__: returns the string "A shuffled deck of {length} cards", where
+            length is the length determined by the __len__ function below.
+            When invoked with diagnostic=True, prints the CardShoe.
+        __len__: returns the number of cards remaining in the deck.
+        remove_top: removes the card at index 0 and shifts the cards up one
+            accordingly. This method takes no arguments.
+
+    Unique Attributes: None
+
+    Inherited Attributes:
+        shuffled_deck: the contents of the deck (a list of card objects
+        length: The number of cards in the original deck.
+    '''
+    def __init__(self, cs_size):
+        """
+        This method creates a CardShoe object that contains cs_size 52 card
+        Deck objects. It will check cs_size for a valid integer between 1 and
+        8, raising a TypeError if it is not an integer or a ValueError if
+        cs_size is not in the correct range.
+        INPUTS: cs_size, integer
+        OUTPUTS: CardShoe object
+        """
+        # Handling problems with cs_size that could break this method.
+        if type(cs_size) != int:
+            raise TypeError("CardShoe: cs_size must be an integer")
+        elif not 1 <= cs_size <= 8:
+            raise ValueError("""CardShoe: cs_size must be type int
+                             within [1, 8].""")
+
+        self.length = 52 * cs_size
+        self.shuffled_deck = []
+        for i in range(cs_size):
+            self.shuffled_deck.extend(Deck().shuffled_deck)
+
