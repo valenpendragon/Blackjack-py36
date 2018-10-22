@@ -285,3 +285,137 @@ class CardShoe(Deck):
         for i in range(cs_size):
             self.shuffled_deck.extend(Deck().shuffled_deck)
 
+
+class Hand(object):
+    '''
+    This class stores cards for a normal blackjack hand. The receive_card
+    method handles maintaining attributes for the Hand object as it receives
+    Cards.
+
+    Methods:
+        __init__: Creates an empty player's hand. Initializes all of the Hand's
+            attributes.
+        __str__: Prints out the Hand.
+        __len__: Returns the number of cards in the Hand.
+        receive_card(card): Requires a Card object. Adds it to the Hand, then
+            updates all of the Hand's attributes (listed below) accordingly.
+
+    Attributes:
+        cards: list of Card objects. Starts empty.
+        has_ace: Boolean. Starts False.
+        soft_score: integer, highest possible hand score less than 22 derivable
+            from the cards (differs from hard_score if an ace is present).
+            Starts 0.
+        hard_score: integer, score of the hand if all Aces are scored as rank 1
+            (differs from soft_score only if an ace is present). Starts 0.
+        blackjack: Boolean. Starts False.
+        has_pair: Boolean. Starts False.
+        busted: Boolean. Starts False.
+
+    '''
+    def __init__(self):
+        """
+        This method creates an empty player's Hand and initializes the Hand's
+        attributes.
+        INPUTS: None
+        OUTPUTS: Hand object
+        """
+        self.cards = []
+        self.has_ace = False
+        self.soft_score = 0
+        self.hard_score = 0
+        self.blackjack = False
+        self.has_pair = False
+        self.busted = False
+
+    def __len__(self):
+        """
+        This method returns the number of cards in the Hand object.
+        INPUTS: None
+        OUTPUTS: length, integer
+        """
+        return len(self.cards)
+
+    def __str__(self, diagnostic=False):
+        """
+        This method prints out the cards contained in the Card object and the
+        possible scores for this hand. If this method is invoked using the form
+        Hand.__str__(diagnostic=True), it will print out all of the Hand
+        attributes.
+        """
+        # This code checks to see which Hand types have been loaded along with
+        # the Hand base class.
+        hand_options = {}
+        try:
+            test = (type(self) == Hand)
+            hand_options[Hand] = 'regular'
+        except NameError:
+            # Hand is not an available type. This traps the error.
+            print("Hand type is not defined")
+
+        try:
+            test = (type(self) == SplitHand)
+            hand_options[SplitHand] = 'split'
+        except NameError:
+            # SplitHand is not an available type.
+            print("SplitHand type is not defined.")
+
+        try:
+            test = (type(self) == DealerHand)
+            hand_options[DealerHand] = "Dealer's"
+        except NameError:
+            # DealerHand is not an available type.
+            print("DealerHand type is not defined.")
+
+        hand_type = hand_options[type(self)]
+        if diagnostic:
+            print("Type of hand: {0}".format(hand_type))
+            if len(self) == 0:
+                print("No cards in the hand currently.".format(end=''))
+            else:
+                print("Cards in player's hand: ".format(end=''))
+                for card in self.cards:
+                    card_str = print(card)
+                    print("{0}".format(card_str, end=''))
+            print("\nRemaining Attributes:")
+
+            # These attributes exist in all classes and subclasses of Hand.
+            print("\thas_ace = {0}".format(self.has_ace))
+            print("\tsoft_score = {0}".format(self.soft_score))
+            print("\thard_score = {0}".format(self.hard_score))
+
+            # The following code makes this method work for all subclasses:
+            # self.blackjack does not exist for split hands.
+            if hand_type != 'split':
+                print("\tblackjack = {0}".format(self.blackjack))
+            # self.has_pair only exists for a player's regular hand.
+            if hand_type == 'regular':
+                print("\thas_pair = {0}".format(self.has_pair))
+
+            # self.busted exists in all classes and subclasses
+            print("\tbusted = {0}".format(self.busted))
+        else:
+            if len(self) == 0:
+                print("No cards have been dealt to the {0} hand yet.".format(
+                        hand_type))
+            else:
+                print("Player's {0}: ".format(hand_type, end=''))
+                for card in self.cards:
+                    card_str = print(card)
+                    print("{0}".format(card_str, end=''))
+                print("\n\tSoft Score: {0}".format(self.soft_score))
+                print("\tHard Score: {0}".format(self.hard_score))
+
+                # This code may seem a little cumbersome, but SplitHand does
+                # not have a blackjack attribute.  This makes the code fully
+                # inheritable for all classes.
+                if type(self) != "SplitHand":
+                    if self.blackjack:
+                        print("This player has blackjack.")
+                if self.busted:
+                    print("This hand has busted.")
+                else:
+                    print("This hand is still solvent.")
+            # Note: The attributes self.has_ace and self.has_pair (if they
+            # exist for this object) are used behind the scenes.
+        return ""

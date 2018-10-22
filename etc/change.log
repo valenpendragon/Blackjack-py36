@@ -17,3 +17,5 @@ This change log details bug fixes, changes, and files added to this project.
 2018-10-18 19:45: Created Class Deck with preamble. Created __init__() method, __len__() method, __str__() method, __del__() method, and remove_top() method. remove_top() removes the card at index 0 and returns it. All of these methods have been fully tested. Cleaned up notes on Classes Card and Ace. Added constants RANKS and SUITS.
 
 2018-10-20: Cleaned up comments in Class Deck. Removed Deck.__del__() method since all it does is write a message. Corrected all comments to reflect this. Added SubClass CardShoe. Added method CardShoe.__init__(). Fully tested CardShoe and its inherited methods and attributes.
+
+2018-10-21 23:37: Created the Hand class. Hand.__init__() simply creates a empty hand for a player that can receive cards from a deal. Hand.__str__() method with diagnostic option has been added. It is setup for the subclasses, but this cannot be fully tested yet. Hand.__len__() method seems to work, but without Hand.receive_card(), this cannot be fully tested either.
