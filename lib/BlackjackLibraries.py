@@ -292,6 +292,10 @@ class Hand(object):
     method handles maintaining attributes for the Hand object as it receives
     Cards.
 
+    Class Order Attributes:
+        hand_type = 'regular' (string)
+        Note: The subclasses use a different value for this constant.
+
     Methods:
         __init__: Creates an empty player's hand. Initializes all of the Hand's
             attributes.
@@ -313,6 +317,8 @@ class Hand(object):
         busted: Boolean. Starts False.
 
     '''
+    hand_type = 'regular'
+
     def __init__(self):
         """
         This method creates an empty player's Hand and initializes the Hand's
@@ -345,31 +351,8 @@ class Hand(object):
         """
         # This code checks to see which Hand types have been loaded along with
         # the Hand base class.
-        hand_options = {}
-        try:
-            test = (type(self) == Hand)
-            hand_options[Hand] = 'regular'
-        except NameError:
-            # Hand is not an available type. This traps the error.
-            print("Hand type is not defined")
-
-        try:
-            test = (type(self) == SplitHand)
-            hand_options[SplitHand] = 'split'
-        except NameError:
-            # SplitHand is not an available type.
-            print("SplitHand type is not defined.")
-
-        try:
-            test = (type(self) == DealerHand)
-            hand_options[DealerHand] = "Dealer's"
-        except NameError:
-            # DealerHand is not an available type.
-            print("DealerHand type is not defined.")
-
-        hand_type = hand_options[type(self)]
         if diagnostic:
-            print("Type of hand: {0}".format(hand_type))
+            print("Type of hand: {0}".format(self.hand_type))
             if len(self) == 0:
                 print("No cards in the hand currently.".format(end=''))
             else:
@@ -386,10 +369,10 @@ class Hand(object):
 
             # The following code makes this method work for all subclasses:
             # self.blackjack does not exist for split hands.
-            if hand_type != 'split':
+            if self.hand_type != 'split':
                 print("\tblackjack = {0}".format(self.blackjack))
             # self.has_pair only exists for a player's regular hand.
-            if hand_type == 'regular':
+            if self.hand_type == 'regular':
                 print("\thas_pair = {0}".format(self.has_pair))
 
             # self.busted exists in all classes and subclasses
@@ -397,9 +380,9 @@ class Hand(object):
         else:
             if len(self) == 0:
                 print("No cards have been dealt to the {0} hand yet.".format(
-                        hand_type))
+                        self.hand_type))
             else:
-                print("Player's {0}: ".format(hand_type, end=''))
+                print("Player's {0} hand: ".format(self.hand_type, end=''))
                 for card in self.cards:
                     card_str = print(card)
                     print("{0}".format(card_str, end=''))
@@ -408,10 +391,16 @@ class Hand(object):
 
                 # This code may seem a little cumbersome, but SplitHand does
                 # not have a blackjack attribute.  This makes the code fully
-                # inheritable for all classes.
-                if type(self) != "SplitHand":
-                    if self.blackjack:
+                # inheritable for all classes. A try block is not as much of a
+                # problem here.
+                try:
+                    if self.hand_type != 'split' and self.blackjack:
                         print("This player has blackjack.")
+                except NameError:
+                    # This pass command traps the NameError split hands.
+                    pass
+
+                # All Hand classes have a busted attribute.
                 if self.busted:
                     print("This hand has busted.")
                 else:
@@ -419,3 +408,62 @@ class Hand(object):
             # Note: The attributes self.has_ace and self.has_pair (if they
             # exist for this object) are used behind the scenes.
         return ""
+
+    def receive_card(self, top_card):
+        """
+        This method adds a card to the Hand. This card should have been the top
+        card from the CardShoe or Deck object in the game.
+        INPUTS: top_card, a Card class object
+        OUTPUTS: None. All changes are made to attributes.
+        """
+        # First, we check for to see if the new card is an ace. If an ace was
+        # already added, self.has_ace is already True.
+        if type(top_card) == Ace:
+            self.has_ace = True
+        # Next, we check for pairs. Only the base (regular) Hand class cares
+        # about pairs.
+        if self.type == 'regular':
+            for card in self.cards:
+                if card.rank == top_card.rank:
+                    self.has_pair = True
+        # Next, we need check to see if the second card in the hand is an Ace
+        # or a 10 value card. The DealerHand is the only class that cares about
+        # this condition. This only matters for the face up card (2nd dealt) as
+        # well.
+        if self.type == 'dealer' and len(self) == 1:
+            if top_card.value == 1 or top_card.value == 10:
+                self.insurance = True
+        # Next, we need to add the card to the cards list.
+        self.cards.append(top_card)
+        # Next, we need to rescore the hand.  All hands are scored using the
+        # same formulas. The scores will be the same if there are no Aces in
+        # the hand. The hard score is always the lower of the two scores. It
+        # treats all Aces as a value of 11.
+        hard_score = 0
+        for card in self.cards:
+            hard_score += card.value
+        if self.has_ace:
+            # So, we detected at least one Ace. We can only score one Ace as a
+            # 11 since 22 is an automatic bust. So, we only need to add 10 to
+            # the hard score to see if it busts.
+            soft_score = hard_score + 10
+        # We check the new soft_score. If it busts, we adjust it down. If not,
+        # then both scores are solvent. Note, we have not tested the hard score
+        # but it is lowest possible score the hand can have. So, we have to
+        # record the score now, even if it is a bust and check for a bust.
+        if soft_score > 21:
+            self.soft_score = hard_score
+            self.hard_score = hard_score
+            # This is the bust check. Any type of Hand can bust.
+            if hard_score > 21:
+                self.busted = True
+        else:  # both scores are solvent
+            self.soft_score = soft_score
+            self.hard_score = hard_score
+        # For regular and dealer Hands, we have to check for a blackjack.
+        if self.type != 'split' and len(self) == 2:
+            # A blackjack requires 1 Ace and 1 10 value card.
+            if self.cards[0].value == 1 and self.cards[1].value == 10:
+                self.blackjack = True
+            if self.cards[1].value == 1 and self.cards[0].value == 10:
+                self.blackjack = True
