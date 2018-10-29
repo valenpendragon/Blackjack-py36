@@ -354,12 +354,11 @@ class Hand(object):
         if diagnostic:
             print("Type of hand: {0}".format(self.hand_type))
             if len(self) == 0:
-                print("No cards in the hand currently.".format(end=''))
+                print("No cards in the hand currently.", end='')
             else:
-                print("Cards in player's hand: ".format(end=''))
+                print("Cards in player's hand: ", end='')
                 for card in self.cards:
-                    card_str = print(card)
-                    print("{0}".format(card_str, end=''))
+                    print(card, end='')
             print("\nRemaining Attributes:")
 
             # These attributes exist in all classes and subclasses of Hand.
@@ -382,10 +381,9 @@ class Hand(object):
                 print("No cards have been dealt to the {0} hand yet.".format(
                         self.hand_type))
             else:
-                print("Player's {0} hand: ".format(self.hand_type, end=''))
+                print("Player's {0} hand: ".format(self.hand_type), end='')
                 for card in self.cards:
-                    card_str = print(card)
-                    print("{0}".format(card_str, end=''))
+                    print(card, end='')
                 print("\n\tSoft Score: {0}".format(self.soft_score))
                 print("\tHard Score: {0}".format(self.hard_score))
 
@@ -422,15 +420,14 @@ class Hand(object):
             self.has_ace = True
         # Next, we check for pairs. Only the base (regular) Hand class cares
         # about pairs.
-        if self.type == 'regular':
-            for card in self.cards:
-                if card.rank == top_card.rank:
-                    self.has_pair = True
+        if self.hand_type == 'regular' and len(self) == 1:
+            if self.cards[0].rank == top_card.rank:
+                self.has_pair = True
         # Next, we need check to see if the second card in the hand is an Ace
         # or a 10 value card. The DealerHand is the only class that cares about
         # this condition. This only matters for the face up card (2nd dealt) as
         # well.
-        if self.type == 'dealer' and len(self) == 1:
+        if self.hand_type == 'dealer' and len(self) == 1:
             if top_card.value == 1 or top_card.value == 10:
                 self.insurance = True
         # Next, we need to add the card to the cards list.
@@ -439,7 +436,7 @@ class Hand(object):
         # same formulas. The scores will be the same if there are no Aces in
         # the hand. The hard score is always the lower of the two scores. It
         # treats all Aces as a value of 11.
-        hard_score = 0
+        hard_score = soft_score = 0
         for card in self.cards:
             hard_score += card.value
         if self.has_ace:
@@ -447,6 +444,8 @@ class Hand(object):
             # 11 since 22 is an automatic bust. So, we only need to add 10 to
             # the hard score to see if it busts.
             soft_score = hard_score + 10
+        else:
+            soft_score = hard_score
         # We check the new soft_score. If it busts, we adjust it down. If not,
         # then both scores are solvent. Note, we have not tested the hard score
         # but it is lowest possible score the hand can have. So, we have to
@@ -461,7 +460,7 @@ class Hand(object):
             self.soft_score = soft_score
             self.hard_score = hard_score
         # For regular and dealer Hands, we have to check for a blackjack.
-        if self.type != 'split' and len(self) == 2:
+        if self.hand_type != 'split' and len(self) == 2:
             # A blackjack requires 1 Ace and 1 10 value card.
             if self.cards[0].value == 1 and self.cards[1].value == 10:
                 self.blackjack = True
