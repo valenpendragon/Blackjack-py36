@@ -23,3 +23,5 @@ This change log details bug fixes, changes, and files added to this project.
 2018-10-23 00:25: Created new Class Order Attribute type. This attribute is a constant set to 'regular' for Hand class objects. Each subclass will have a different value for this Class Order Attribute. This allowed the code to be cleared of most of the try/except blocks used to trap NameErrors for attributes unique to a specific type of hand. Began work on Hand.receive_card. This commit will not be pushed to origin since testing has not been done yet.
 
 2018-10-28 21:00: Debugged Hand.__str__() outputs and Hand.receive_card() functionality for regular hands.
+
+2018-11-01 15:15: Built subclass SplitHand. Added attribute bet_amt to Hand and SplitHand classes. Updated Hand.__init__() method to initialize bet_amt with an ante. Updated Hand.__str__() method to print the bet_amt properly.  Changes to Hand methods are fully tested for the Hand and SplitHand classes. Both __init__() methods now raise TypeErrors when the arguments are the wrong type.

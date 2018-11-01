@@ -33,7 +33,8 @@ import random as rd
 
 # Constants:
 RANKS = ('A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K')
-SUITS = ( 'S', 'D', 'H', 'C')
+SUITS = ('S', 'D', 'H', 'C')
+
 
 class Card(object):
     '''
@@ -233,7 +234,7 @@ class Deck(object):
 
     def remove_top(self):
         """
-        This mechod removes the card at index zero of the Deck object. This is
+        This method removes the card at index zero of the Deck object. This is
         used when dealing cards from the deck.
         INPUTS: None
         OUTPUTS: card, Card type object
@@ -277,8 +278,7 @@ class CardShoe(Deck):
         if type(cs_size) != int:
             raise TypeError("CardShoe: cs_size must be an integer")
         elif not 1 <= cs_size <= 8:
-            raise ValueError("""CardShoe: cs_size must be type int
-                             within [1, 8].""")
+            raise ValueError("CardShoe: cs_size must be within interval [1, 8].")
 
         self.length = 52 * cs_size
         self.shuffled_deck = []
@@ -297,15 +297,16 @@ class Hand(object):
         Note: The subclasses use a different value for this constant.
 
     Methods:
-        __init__: Creates an empty player's hand. Initializes all of the Hand's
-            attributes.
+        __init__(ante): Creates an empty player's hand. Initializes all of the
+            Hand's attributes. Raises a TypeError if the ante is not an
+            integer.
         __str__: Prints out the Hand.
         __len__: Returns the number of cards in the Hand.
         receive_card(card): Requires a Card object. Adds it to the Hand, then
             updates all of the Hand's attributes (listed below) accordingly.
 
     Attributes:
-        cards: list of Card objects. Starts empty.
+        cards: list of Card or Ace objects. Starts empty.
         has_ace: Boolean. Starts False.
         soft_score: integer, highest possible hand score less than 22 derivable
             from the cards (differs from hard_score if an ace is present).
@@ -315,17 +316,20 @@ class Hand(object):
         blackjack: Boolean. Starts False.
         has_pair: Boolean. Starts False.
         busted: Boolean. Starts False.
+        bet_amt: integer. Must be supplied when instantiated.
 
     '''
     hand_type = 'regular'
 
-    def __init__(self):
+    def __init__(self, ante):
         """
         This method creates an empty player's Hand and initializes the Hand's
-        attributes.
-        INPUTS: None
+        attributes. Raises a TypeError if ante is not an integer.
+        INPUTS: ante (integer)
         OUTPUTS: Hand object
         """
+        if type(ante) != int:
+            raise TypeError("Hand.__init__:A bet must be an integer.")
         self.cards = []
         self.has_ace = False
         self.soft_score = 0
@@ -333,6 +337,7 @@ class Hand(object):
         self.blackjack = False
         self.has_pair = False
         self.busted = False
+        self.bet_amt = ante
 
     def __len__(self):
         """
@@ -365,6 +370,7 @@ class Hand(object):
             print("\thas_ace = {0}".format(self.has_ace))
             print("\tsoft_score = {0}".format(self.soft_score))
             print("\thard_score = {0}".format(self.hard_score))
+            print("\tbet_amt = {0}".format(self.bet_amt))
 
             # The following code makes this method work for all subclasses:
             # self.blackjack does not exist for split hands.
@@ -380,12 +386,14 @@ class Hand(object):
             if len(self) == 0:
                 print("No cards have been dealt to the {0} hand yet.".format(
                         self.hand_type))
+                print("Initial bet = {0}".format(self.bet_amt))
             else:
                 print("Player's {0} hand: ".format(self.hand_type), end='')
                 for card in self.cards:
                     print(card, end='')
                 print("\n\tSoft Score: {0}".format(self.soft_score))
                 print("\tHard Score: {0}".format(self.hard_score))
+                print("Current bet = {0}".format(self.bet_amt))
 
                 # This code may seem a little cumbersome, but SplitHand does
                 # not have a blackjack attribute.  This makes the code fully
@@ -395,7 +403,7 @@ class Hand(object):
                     if self.hand_type != 'split' and self.blackjack:
                         print("This player has blackjack.")
                 except NameError:
-                    # This pass command traps the NameError split hands.
+                    # This pass command traps the NameError on split hands.
                     pass
 
                 # All Hand classes have a busted attribute.
@@ -414,7 +422,10 @@ class Hand(object):
         INPUTS: top_card, a Card class object
         OUTPUTS: None. All changes are made to attributes.
         """
-        # First, we check for to see if the new card is an ace. If an ace was
+        # First, we need to make sure that top_card really is a Card type.
+        if type(top_card) != Card and type(top_card) != Ace:
+            raise TypeError("Hand.receive_card: Argumemt must be of Card or Ace type")
+        # Next, we check for to see if the new card is an ace. If an ace was
         # already added, self.has_ace is already True.
         if type(top_card) == Ace:
             self.has_ace = True
@@ -466,3 +477,70 @@ class Hand(object):
                 self.blackjack = True
             if self.cards[1].value == 1 and self.cards[0].value == 10:
                 self.blackjack = True
+
+
+class SplitHand(Hand):
+    '''
+    Class SplitHand is a subclass of class Hand. Like Hand, it stores cards and
+    attributes for blackjack split hands. When a player has a pair of cards,
+    they have the option of splitting up the pair, creating two new hand. This
+    new type of hand, the "split hand", is more restricted than a regular hand.
+    It cannot have a blackjack, nor can it split off another hand if the player
+    draws a pair for it. The original regular Hand is deleted after the cards
+    and bets are moved.
+
+    Class Order Attributes:
+        hand_type = 'split' (string)
+
+    Unique Methods:
+        __init__(card, bet): This subclass requires a card and a bet amount as
+            arguments. Raises a TypeError if card is not Card type or bet is
+            not an integer.
+
+    Inherited Methods:
+        __str__: Prints out the SplitHand.
+        __len__: Returns the number of cards in the SplitHand.
+        receive_card(card): Requires a Card object. Adds it to the SplitHand,
+            then updates all of the Hand's attributes (listed below)
+            accordingly.
+
+    Unique Attributes: None
+
+    Inherited Attributes:
+        cards: list of Card or Ace objects. Starts empty, then adds Card or Ace
+            object supplied as an argument to the new SplitHand.
+        has_ace: Boolean. Starts False.
+        soft_score: integer, highest possible hand score less than 22 derivable
+            from the cards (differs from hard_score if an ace is present).
+            Starts 0.
+        hard_score: integer, score of the hand if all Aces are scored as rank 1
+            (differs from soft_score only if an ace is present). Starts 0.
+        busted: Boolean. Starts False.
+        bet_amt: integer. Must be supplied when instantiated.
+
+    Note: SplitHand has no blackjack or has_pair attribute because it is formed
+        after 2 cards have already been dealt to the player.
+
+    '''
+    hand_type = 'split'
+
+    def __init__(self, card, bet):
+        """
+        This method initializes the SplitHand. It requires two arguments, a
+        card to start off the hand, and bet amount for this hand. SplitHands
+        are created from a pair of cards of the same rank.
+        INPUTS: card (a Card or Ace object), bet (integer)
+        OUTPUTS: a new SplitHand object
+        """
+        # First, we need to make sure the inputs are correct.
+        if type(card) != Card and type(card) != Ace:
+            raise TypeError("SplitHand.__init__: First argument is not a Card or Ace")
+        if type(bet) != int:
+            raise TypeError("SplitHand.__init__:A bet must be an integer.")
+        self.cards = []
+        self.has_ace = False
+        self.soft_score = 0
+        self.hard_score = 0
+        self.busted = False
+        self.bet_amt = bet
+        self.receive_card(card)
