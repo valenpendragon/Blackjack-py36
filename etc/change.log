@@ -25,3 +25,5 @@ This change log details bug fixes, changes, and files added to this project.
 2018-10-28 21:00: Debugged Hand.__str__() outputs and Hand.receive_card() functionality for regular hands.
 
 2018-11-01 15:15: Built subclass SplitHand. Added attribute bet_amt to Hand and SplitHand classes. Updated Hand.__init__() method to initialize bet_amt with an ante. Updated Hand.__str__() method to print the bet_amt properly.  Changes to Hand methods are fully tested for the Hand and SplitHand classes. Both __init__() methods now raise TypeErrors when the arguments are the wrong type.
+
+2018-11-02 14:35: Built the subclas DealerHand. Created DealerHand.__init__() method. Fixed a bug that identifies Dealer as a Player in Hand.__str__() method. Fixed a bug Hand.__str__() that generates an error with DealerHands. Created DealerHand.dealer_print() method, which conceals the Dealer's hold card when the table prints out. Like Hand.__str__(), it has a diagnostic mode of printout. Pairs, blackjack, presence of Aces, insurance flags, and hand busting fully tested.

@@ -370,7 +370,12 @@ class Hand(object):
             print("\thas_ace = {0}".format(self.has_ace))
             print("\tsoft_score = {0}".format(self.soft_score))
             print("\thard_score = {0}".format(self.hard_score))
-            print("\tbet_amt = {0}".format(self.bet_amt))
+            # This is Dealer only attribute.
+            if self.hand_type == 'dealer':
+                print("\tinsurance = {0}".format(self.insurance))
+            # Only the Dealer has no bet_amt attribute.
+            if self.hand_type != 'dealer':
+                print("\tbet_amt = {0}".format(self.bet_amt))
 
             # The following code makes this method work for all subclasses:
             # self.blackjack does not exist for split hands.
@@ -386,14 +391,19 @@ class Hand(object):
             if len(self) == 0:
                 print("No cards have been dealt to the {0} hand yet.".format(
                         self.hand_type))
-                print("Initial bet = {0}".format(self.bet_amt))
+                if self.hand_type != 'dealer':
+                    print("Initial bet = {0}".format(self.bet_amt))
             else:
-                print("Player's {0} hand: ".format(self.hand_type), end='')
+                if self.hand_type == 'dealer':
+                    print("Dealer's hand: ".format(self.hand_type), end='')
+                else:
+                    print("Player's {0} hand: ".format(self.hand_type), end='')
                 for card in self.cards:
                     print(card, end='')
                 print("\n\tSoft Score: {0}".format(self.soft_score))
                 print("\tHard Score: {0}".format(self.hard_score))
-                print("Current bet = {0}".format(self.bet_amt))
+                if self.hand_type != 'dealer':
+                    print("Current bet = {0}".format(self.bet_amt))
 
                 # This code may seem a little cumbersome, but SplitHand does
                 # not have a blackjack attribute.  This makes the code fully
@@ -544,3 +554,120 @@ class SplitHand(Hand):
         self.busted = False
         self.bet_amt = bet
         self.receive_card(card)
+
+
+class DealerHand(Hand):
+    '''
+    Class DealerHand is a subclass of Class Hand. Like Hand, it stores cards
+    and attributes for the blackjack Dealer. As such, pairs have no meaning
+    because the Dealer cannot have split hands. The condition of Blackjack does
+    have meanning for the Dealer, however. The Dealer scores Aces the same way
+    players do, although the Dealer has more restricted choices about how they
+    play their Hand. The Dealer can bust, like any other player. The Dealer
+    makes no bets. So, their hand has no bet_amt attribute.
+
+    There is a unique attribute for the Dealer. When the Dealer has a card that
+    is has a value of ten or an Ace showing, player's have the option to place
+    an "insurance bet" on whether or not the Dealer has blackjack. The Dealer
+    keeps their first card unexposed until the Dealer's turn arrives.
+
+    Class Order Attribute:
+        hand_type = 'dealer' (split)
+
+    Unique Methods:
+        __init__: Initializes the values for the Dealer's Hand. It takes no
+            argument, unlike the other Hand objects.
+        dealer_prin(diagnostic)t: Prints out the Dealer's Hand, while keeping
+            the hold card "face down".
+
+    Inherited Methods:
+        __str__: Prints out the SplitHand.
+        __len__: Returns the number of cards in the SplitHand.
+        receive_card(card): Requires a Card object. Adds it to the SplitHand,
+            then updates all of the Hand's attributes (listed below)
+            accordingly.
+
+    Unique Attributes:
+        insurance: Boolean. Starts False. Indicates that the Dealer's visible
+            card had a value of ten or is an Ace.
+
+    Inherited Attributes:
+        cards: list of Card or Ace objects. Starts empty.
+        has_ace: Boolean. Starts False.
+        soft_score: integer, highest possible hand score less than 22 derivable
+            from the cards (differs from hard_score if an ace is present).
+            Starts 0.
+        hard_score: integer, score of the hand if all Aces are scored as rank 1
+            (differs from soft_score only if an ace is present). Starts 0.
+        blackjack: Boolean. Starts False.
+        busted: Boolean. Starts False.
+
+    Note: DealerHand has no bet_amt because bets are determined by the Players
+        not by the Dealer. It also does not have a has_pair attribute because
+        the Dealer cannot split their hands.
+    '''
+    hand_type = 'dealer'
+
+    def __init__(self):
+        """
+        This method initializes the Dealer's Hand. It takes no arguments
+        because the Dealer makes no bets.
+        INPUTS: None
+        OUTPUTS: A new DealerHand object
+        """
+        self.cards = []
+        self.has_ace = False
+        self.soft_score = 0
+        self.hard_score = 0
+        self.blackjack = False
+        self.busted = False
+        self.insurance = False
+
+    def dealer_print(self, diagnostic=False):
+        """
+        This method prints out the dealer's hand, while keeping the hold card
+        concealed. This is used during the player's turns and while hands are
+        being dealt to everyone at the table.
+        INPUTS: diagnostic (boolean), optional argument
+        OUTPUTS: None. All output is to the screen.
+        """
+        # This code prints out a diagnostic version of the card con
+        if diagnostic:
+            print("Type of hand: {0}".format(self.hand_type))
+            if len(self) == 0:
+                print("No cards in the hand currently.", end='')
+            else:
+                print("Cards in Dealer's hand: ", end='')
+                for card in self.cards:
+                    print(card, end='')
+            print("\nRemaining Attributes:")
+
+            # These attributes exist in all classes and subclasses of Hand.
+            print("\thas_ace = {0}".format(self.has_ace))
+            print("\tsoft_score = {0}".format(self.soft_score))
+            print("\thard_score = {0}".format(self.hard_score))
+
+            # self.insurance is unique to Dealer's.
+            print("\tinsurance = {0}".format(self.insurance))
+
+            # self.busted exists in all classes and subclasses
+            print("\tbusted = {0}".format(self.busted))
+        else:
+            if len(self) == 0:
+                print("No cards have been dealt to the Dealer's hand yet.")
+            else:
+                print("Dealer's {0} hand: ".format(self.hand_type), end='')
+                for card in self.cards:
+                    if card == self.cards[0]:
+                        print("hold", end='')
+                    else:
+                        print(card, end='')
+                print("\n\tSoft Score: {0}".format(self.soft_score))
+                print("\tHard Score: {0}".format(self.hard_score))
+
+                # All Hand classes have a busted attribute.
+                if self.busted:
+                    print("This hand has busted.")
+                else:
+                    print("This hand is still solvent.")
+        return
