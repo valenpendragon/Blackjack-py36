@@ -659,13 +659,11 @@ class DealerHand(Hand):
                 print("Dealer's {0} hand: ".format(self.hand_type), end='')
                 for card in self.cards:
                     if card == self.cards[0]:
-                        print("hold", end='')
+                        print("hold ", end='')
                     else:
                         print(card, end='')
-                print("\n\tSoft Score: {0}".format(self.soft_score))
-                print("\tHard Score: {0}".format(self.hard_score))
-
                 # All Hand classes have a busted attribute.
+                print("\n")
                 if self.busted:
                     print("This hand has busted.")
                 else:
