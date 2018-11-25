@@ -669,3 +669,76 @@ class DealerHand(Hand):
                 else:
                     print("This hand is still solvent.")
         return
+
+
+class Player(object):
+    '''
+    The Player object is a computer player controlled by the Human Player. A
+    player object is used to track the stake (money) this computer player has,
+    the hands, if any, that this player is playing, and current total of all
+    outstanding bets this player has, including insurance bets. It also tracks
+    the relattve skill level of this computer player, as that controls which
+    tables it can challenge. Player.hands is a dictionary of up to two Hands.
+
+    Note: Bets on individual hands are attributes of class Hand and SplitHand.
+    NOte: Player objects start with no Hand objects. All hands are removed at
+    the end of each round. During a round, a Player can will have either one
+    regular Hand or two Split Hands.
+
+    Class Order Attributes:
+        SKILL_TYPES = ('starter', 'adept', 'professional', 'master',
+                       'high roller')
+
+    Methods:
+        __init__(name, skill, bank, reserve): This method requires a name,
+            (a string). For the other three arguments, there are default
+            values. It uses these values to initialize the computer player.
+        __str__(diagnostic): The argument defaults to False. This prints out
+            the information on this computer player. Diagnostic mode prints
+            out additional information.
+        __len__: Returns the number of valid hands this Player still has.
+        __del__(diagnostic): The argument defaults to False. Prints o message
+            when a player breaks their bank with no reserve. Diagnostic movde
+            prints more information.
+        create_hand(type, ante, which_hand, start_card): This method creates
+            an empty regular hand by default (type = 'regular', which_hand =
+            'one', start_card = None). It can create a DealerHand if type =
+            'deealer' is specified. In that case, all other arguments are set
+            to None. If a SplitHand is required, which_hand and start_card
+            MUST be specified. For Hand and SplitHand objects, ante is a
+            required argument.
+        add_card_to_hand(card, which_hand): card must be a Card or Ace object.
+            which_hand defaults to 'one'. This method returns True if the hand
+            remains solvent, False if it busts.
+        split_check(): Returns the value of hands['one'].has_pair.
+        split_hand(hands['one]): This method takes the original hand (a pair)
+            and splits it up into two SplitHand objects. It prompts the human
+            player for an ante for this new hand. It removes the original hand
+            frorm the game.
+        update_bet(amt, which_hand,table_max): amt is a required value.
+            which_hand defaults to 'one', table_max to 0. table_max is the
+            maximum value allowed for any final bet. It also checks the bet
+            on the Hand since bets cannot be raised to more than double the
+            original ante. Sometables hove no max. So, table_max=0 means the
+            max will be ignored.
+
+    Attributes:
+        name: a string. There is no default valur for it. It must be supplied
+            to __init__().
+        skill_level: string, restricted to values in SKILL_TYPES. Default is
+            'starter'.
+        reserve: integer. This is the money the human player opted to have
+            this computer player hold in reserve to avoid removal from the
+            game. Default is 0.
+        bank: integet. This is the amount of money this computer player can use
+            to plave bets. No default or starting value.
+        insurance_bet: integer. This is the amount of the computer player's
+            insurance bet, if one could be made for the current round. Default
+            is 0.
+        total_bets: integer. Total of all bets places, including insuracnce
+            bets. Starts at 0. Cannot exceed the computer player's bank.
+        hands: A dictionary of Hand objects. Can consist of one regular Hand,
+            addressed as hands['one'] or two SplitHand objects, addressed as
+            hands['one'] or hands['two']. Starts empty and ends each round
+            empty. Hands are deleted after they bust.
+    '''
