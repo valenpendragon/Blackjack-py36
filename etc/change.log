@@ -31,3 +31,5 @@ This change log details bug fixes, changes, and files added to this project.
 2018-11-02 14:45: Fully tested and debugged DealerHand.dealer_print() method in both modes.
 
 2018-11-24 22:40: Preamble for Class Player created. No methods have been coded yet, nor any testing done either.
+
+2018-11-25 23:45: Cleaned up some typos and errors in the preamble. Created Player.__init__() method and did superficial testing of it. Created skeleton for Player.__str__() method, then built the basic print out for Player objects. Basic printout tested for single and split hands.

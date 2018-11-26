@@ -690,8 +690,8 @@ class Player(object):
                        'high roller')
 
     Methods:
-        __init__(name, skill, bank, reserve): This method requires a name,
-            (a string). For the other three arguments, there are default
+        __init__(name, skill, bank, reserve, table_min): This method requires
+            a name, a string). For the other four arguments, there are default
             values. It uses these values to initialize the computer player.
         __str__(diagnostic): The argument defaults to False. This prints out
             the information on this computer player. Diagnostic mode prints
@@ -730,15 +730,76 @@ class Player(object):
         reserve: integer. This is the money the human player opted to have
             this computer player hold in reserve to avoid removal from the
             game. Default is 0.
-        bank: integet. This is the amount of money this computer player can use
+        bank: integer. This is the amount of money this computer player can use
             to plave bets. No default or starting value.
-        insurance_bet: integer. This is the amount of the computer player's
-            insurance bet, if one could be made for the current round. Default
-            is 0.
-        total_bets: integer. Total of all bets places, including insuracnce
-            bets. Starts at 0. Cannot exceed the computer player's bank.
+        insurance_bet: integer. Normally set to None unless the player decides
+            to place an insurance bet, if one could be made during the current
+            round. Default None,.
+        total_bets: integer. Total of all bets places, including insurance
+            bets. Starts each round as None and returns to None once all bets
+            have been resolved. Cannot exceed the computer player's bank.
         hands: A dictionary of Hand objects. Can consist of one regular Hand,
             addressed as hands['one'] or two SplitHand objects, addressed as
-            hands['one'] or hands['two']. Starts empty and ends each round
-            empty. Hands are deleted after they bust.
+            hands['one'] or hands['two']. Starts with each Hand set to None.
+            Each hand is reset to None.
     '''
+
+    # Class Order Attributes:
+    SKILL_TYPES = ('starter', 'adept', 'professional', 'master', 'high roller')
+
+    def __init__(self, name, skill='starter', bank=10000, reserve=0, table_min=10):
+        """
+        This method initializes the Player object's at attributes using the
+        values supplied in the arguments. For a starting player, all of the
+        defaults are used. Only a player name is required.
+        INPUTS: name, string (required). skill. string that must match a value
+            in SKILL_TYPES (optional, defaults to 'starter'). bank, integer
+            (optional, default is 10000). reserve, integer (optional default
+            is 0). table_min, integer (optional, default is 10).
+        OUTPUTS: a Player object
+        """
+
+        # The name is a required argument, but we can render it a string.
+        self.name = str(name)
+        # skill_level must be a choice in SKILL_TYPES. If not, we raise a
+        # ValueError. Since this constant does not exist yet, we need to create
+        # a local copy for the purpose of instantiating the object.
+        skills = ('starter', 'adept', 'professional', 'master', 'high roller')
+        if skill in skills:
+            self.skill_level = skill
+        else:
+            raise ValueError("Pleyer.__init__(): {0} is an invalid choice".format(skill))
+        # Reserve must be less than the bank or the player cannot play. In
+        # reality, it also needs to be small enough to allow the player to ante
+        # up at the start of their turn.
+        if reserve > bank - table_min:
+            raise ValueError("Player.__init__(): reserve is too large.")
+        else:
+            self.bank = bank - reserve
+            self.reserve = reserve
+        self.total_bets = None
+        self.insurance_bet = None
+        self.hands = {'one': None, 'two': None}
+
+    def __str__(self, diagnostic=False):
+        """
+        This method prints out the player's name, bank, reserve, hand, and
+        insurance bets. In diagnoistic mode, adds a diagnostic header to the
+        output and requests diagnostic output from the Hands. This method can
+        tell if it is called for a regular player or a dealer.
+        INTPUTS: diagnostic, boolean (optiona, default is False).
+        OUTPUTS: None, All output is to the terminal screen.
+        """
+        if type(self) == Player:
+            if not diagnostic:
+                print(f"Player: {self.name}")
+                print("Remaining Bank: ${:,}".format(self.bank))
+                print("Cash Reserve: ${:,}".format(self.reserve))
+                print(f"Skill Level: {self.skill_level}")
+                if self.hands['one'] != None:
+                    print(self.hands['one'])
+                if self.hands['two'] != None:
+                    print(self.hands['two'])
+        else:  # This is a dealer.
+            pass
+        return ""
