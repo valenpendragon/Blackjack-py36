@@ -432,10 +432,7 @@ class Hand(object):
         INPUTS: top_card, a Card class object
         OUTPUTS: None. All changes are made to attributes.
         """
-        # First, we need to make sure that top_card really is a Card type.
-        if type(top_card) != Card and type(top_card) != Ace:
-            raise TypeError("Hand.receive_card: Argumemt must be of Card or Ace type")
-        # Next, we check for to see if the new card is an ace. If an ace was
+        # First, we check for to see if the new card is an ace. If an ace was
         # already added, self.has_ace is already True.
         if type(top_card) == Ace:
             self.has_ace = True
@@ -796,10 +793,23 @@ class Player(object):
                 print("Remaining Bank: ${:,}".format(self.bank))
                 print("Cash Reserve: ${:,}".format(self.reserve))
                 print(f"Skill Level: {self.skill_level}")
-                if self.hands['one'] != None:
+                if self.hands['one'] is not None:
                     print(self.hands['one'])
-                if self.hands['two'] != None:
+                if self.hands['two'] is not None:
                     print(self.hands['two'])
+            else:  # This is a diagnostic printout.
+                print(f"Diagnostic printout for {self.name}")
+                print("Bank contains ${:,}, with a cash reserve of ${:,}.".format(self.bank, self.reserve))
+                print(f"Skill level is {self.skill_level}.")
+                print("Players hands are:")
+                if self.hands['one'] is not None:
+                    self.hands['one'].__str__(diagnostic=True)
+                else:
+                    print("First hand does not exist.")
+                if self.hands['two'] is not None:
+                    self.hands['two'].__str__(diagnostic=True)
+                else:
+                    print("Second hand does not exist.")
         else:  # This is a dealer.
             pass
         return ""
