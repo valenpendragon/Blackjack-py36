@@ -813,3 +813,22 @@ class Player(object):
         else:  # This is a dealer.
             pass
         return ""
+
+    def __len__(self):
+        """
+        This method returns the number of remaining valid Hand objects that the
+        Player object still has.
+        INPUTS: None
+        OUTPUTS: nunber of valid Hand objects, integer [0,2]
+        """
+        # Initialize the counter.
+        hand_ctr = 0
+        # Increment the counter if the Hand exist and is not busted.
+        if self.hands['one'] is not None:
+            if not self.hands['one'].busted:
+                hand_ctr += 1
+        if self.hands['two'] is not None:
+            if not self.hands['two'].busted:
+                hand_ctr += 1
+        # Return the value in the counter.
+        return hand_ctr
