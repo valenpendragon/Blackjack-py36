@@ -39,3 +39,5 @@ This change log details bug fixes, changes, and files added to this project.
 2018-12-15 09:15: Testing delivering Card object to SplitHand objects in both Player.hands. Sending Cards to regular hands in both Player.hands have been tested already. All of the atributes are correct and methods behave properly for SplitHand objects. Dealer.__str__() is still a placeholder.
 
 2018-12-18 02:50: Built and tested Player.__len__() method. This method returns the number of valid hands the Player object still has.
+
+2018-12-18 04:00: Built and fully tested Player.__del__() method. This method prints a message with a player or dealer is removed from current game session. Since Class Dealer has not been created yet, that functionality must be tested at a later date.

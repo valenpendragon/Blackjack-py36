@@ -823,7 +823,7 @@ class Player(object):
         """
         # Initialize the counter.
         hand_ctr = 0
-        # Increment the counter if the Hand exist and is not busted.
+        # Increment the counter if the Hand exist and is not busted..
         if self.hands['one'] is not None:
             if not self.hands['one'].busted:
                 hand_ctr += 1
@@ -832,3 +832,15 @@ class Player(object):
                 hand_ctr += 1
         # Return the value in the counter.
         return hand_ctr
+
+    def __del__(self):
+        """
+        This method warns the human player that one of their computer players,
+        or the current dealer, has been removed from the current game.
+        INPUTS: None
+        OUTPUTS: None
+        """
+        if type(self) == Player:
+            print(f"Player {self.name} has been removed from the game.")
+        else:  # This is a Dealer object.
+            print(f"The Dealer, {self.name} has been removed from the game.")
