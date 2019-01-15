@@ -41,3 +41,5 @@ This change log details bug fixes, changes, and files added to this project.
 2018-12-18 02:50: Built and tested Player.__len__() method. This method returns the number of valid hands the Player object still has.
 
 2018-12-18 04:00: Built and fully tested Player.__del__() method. This method prints a message with a player or dealer is removed from current game session. Since Class Dealer has not been created yet, that functionality must be tested at a later date.
+
+2019-01-15 xx:xx: Cleaned up some out of date comments in Class Player preamble. Created and tested Player.create_hand(), Player.create_split_hand(), and Player.add_card_to_hand() methods.

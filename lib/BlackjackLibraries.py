@@ -697,13 +697,11 @@ class Player(object):
         __del__(diagnostic): The argument defaults to False. Prints o message
             when a player breaks their bank with no reserve. Diagnostic movde
             prints more information.
-        create_hand(type, ante, which_hand, start_card): This method creates
-            an empty regular hand by default (type = 'regular', which_hand =
-            'one', start_card = None). It can create a DealerHand if type =
-            'deealer' is specified. In that case, all other arguments are set
-            to None. If a SplitHand is required, which_hand and start_card
-            MUST be specified. For Hand and SplitHand objects, ante is a
-            required argument.
+        create_hand(ante): Creates an empty in Player.hands['one'] with a bet
+            equal to the ante argument.
+        create_split_hand(ante, which_hand, start_card): Creates a split hand
+            with a bet equal to ante in PLayer.hands[which_hand] containing
+            start_card as the first card.
         add_card_to_hand(card, which_hand): card must be a Card or Ace object.
             which_hand defaults to 'one'. This method returns True if the hand
             remains solvent, False if it busts.
@@ -784,7 +782,7 @@ class Player(object):
         insurance bets. In diagnoistic mode, adds a diagnostic header to the
         output and requests diagnostic output from the Hands. This method can
         tell if it is called for a regular player or a dealer.
-        INTPUTS: diagnostic, boolean (optiona, default is False).
+        INTPUTS: diagnostic, boolean (optional, default is False).
         OUTPUTS: None, All output is to the terminal screen.
         """
         if type(self) == Player:
@@ -844,3 +842,39 @@ class Player(object):
             print(f"Player {self.name} has been removed from the game.")
         else:  # This is a Dealer object.
             print(f"The Dealer, {self.name} has been removed from the game.")
+
+    def create_hand(self, ante):
+        """
+        This method creates an empty hand in Player.hands['one']. This is the
+        computer player's regular hand. It requires an integer argument ante
+        as an initial bet for this hand.
+        INPUTS: ante, integer
+        OUTPUTS: nonw. All output is part of the changes to the PLeyer object.
+        """
+        self.hands['one'] = Hand(ante)
+
+    def create_split_hand(self, ante, which_hand, start_card):
+        """
+        This method requires three arguments. It needs an ante, which can be
+        the bet on the ariginal hand which now is a pair. It needs to know
+        which of the two hands it is creating, the split hand in
+        PLayer.hands['one'] or PLayer.hands['two']. It also needs a card from
+        the pair being split up to make the first card in this new split hand.
+        INPUTS: ante, integer (required), which_hand, string (required, must
+            be either 'one' or 'two'), start_card, Card or Ace (required)
+        OUTPUTS: none. All changes take place inside the Player object.
+        """
+        self.hands[which_hand] = SplitHand(start_card, ante)
+
+    def add_card_to_hand(self, card, which_hand='one'):
+        """
+        This method adds a card to an existing hand. When split hands exist,
+        this should be specified, as it defauled to 'one', the regular hand.
+        This method returns True if the hand is still viable, False otherwise.
+        INPUTS: card, a Card or Ace object (required), which_hand, string
+            (optional, must be 'one' or 'two', defaults to 'one')
+        OUTPUTS: boolean, True if the hand is still viable, False otherwise.
+            This method also changes the hand and its attributes.
+        """
+        self.hands[which_hand].receive_card(card)
+        return not self.hands[which_hand].busted
