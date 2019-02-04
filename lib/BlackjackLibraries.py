@@ -878,3 +878,19 @@ class Player(object):
         """
         self.hands[which_hand].receive_card(card)
         return not self.hands[which_hand].busted
+
+    def split_check(self):
+        """
+        This method checks to see if regular hand has a pair. It does it by
+        returning the value of Player.hands['one'].has_pair. This method might
+        not be needed for the text or the pygame versions.
+        INPUTS: none, it uses the player object
+        OUTPUTS: boolean, True of there is a pair, False otherwise
+        """
+        if self.hands['one']:
+            if type(self.hands['one']) == Hand:
+                return self.hands['one'].has_pair
+        # Either the first hand does not exist or the type is a subtype of
+        # Hand object. So, had_pair is not an attribute. We need to default to
+        # False.
+        return False
