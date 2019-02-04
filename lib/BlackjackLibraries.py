@@ -539,11 +539,6 @@ class SplitHand(Hand):
         INPUTS: card (a Card or Ace object), bet (integer)
         OUTPUTS: a new SplitHand object
         """
-        # First, we need to make sure the inputs are correct.
-        if type(card) != Card and type(card) != Ace:
-            raise TypeError("SplitHand.__init__: First argument is not a Card or Ace")
-        if type(bet) != int:
-            raise TypeError("SplitHand.__init__:A bet must be an integer.")
         self.cards = []
         self.has_ace = False
         self.soft_score = 0
@@ -894,3 +889,48 @@ class Player(object):
         # Hand object. So, had_pair is not an attribute. We need to default to
         # False.
         return False
+
+    def split_hand(self, table_max=0):
+        """
+        This method removes the original hand, separates the pair of cards,
+        creates a new SplitHand in hands['one'] and copies over the original
+        bet to that hand. Next, it takes the second card in the pair, prompts
+        the User for a bet on this player's new split hand, and creates a new
+        SplitHand from the second card and bet amount in the hands['two']
+        position.
+        INPUTS: table_max, integer (optional, defaults to 0). User is promppted
+            for a second integer value as a bet on the new split hand.
+        OUTPUTS: None. All changes take place within the PLayer object's hands.
+        """
+        # First, we need to pull some of the data from the original hand. We
+        # need the bet amount and both cards.
+        orig_bet = self.hands['one'].bet_amt
+        card_1 = self.hands['one'].cards[0]
+        card_2 = self.hands['one'].cards[1]
+        # Now, we need to create the first split hand.
+        self.create_split_hand(orig_bet, 'one', card_1)
+        # Before we can make the second split hand, we need a bet amount for
+        # it. We will prompt the User for the amount, checking it against the
+        # table_max.
+        while True:
+            # First, we prompt the User. If the table_max is set, it will
+            # remind the user of this amount.
+            if table_max != 0:
+                print(f"The maximum bet at this table is ${table_max}.")
+            answer = input("Please enter a bet for the new hand: ")
+            # Since the User might enter a non-integer, we need to check the
+            # data type.
+            try:
+                new_bet_amt = int(answer)
+            except TypeError:
+                print(f"{answer} is an invalid number.")
+                continue
+            else:
+                if new_bet_amt >= table_max > 0:
+                    print(f"${new_bet_amt} is more than the table maximum of ${table_max}.")
+                    print("Please try again.")
+                    continue
+            break
+        # We can create the second split hand now.
+        self.create_split_hand(new_bet_amt, 'two', card_2)
+        print("Your new split hand has been created.")

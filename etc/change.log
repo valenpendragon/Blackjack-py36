@@ -45,3 +45,5 @@ This change log details bug fixes, changes, and files added to this project.
 2019-01-15 xx:xx: Cleaned up some out of date comments in Class Player preamble. Created and tested Player.create_hand(), Player.create_split_hand(), and Player.add_card_to_hand() methods.
 
 2019-02-04 xx:xx: Created Player.split_check() method and fully tested it. This method returns True only when Player.hands['one'] exists, is not another Hand subtype, and has a pair. In all other conditions, it returns False.
+
+2019-02-04 16:35: Removed a card/ace test from SplitHand.__init__() method that was causing the initialization to fail, even though valid Card and Ace objects were being supplied as arguments. Created Player.split_hand() method and fully tested it.
