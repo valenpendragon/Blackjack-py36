@@ -934,3 +934,66 @@ class Player(object):
         # We can create the second split hand now.
         self.create_split_hand(new_bet_amt, 'two', card_2)
         print("Your new split hand has been created.")
+
+    def update_total_bet(self):
+        """
+        This method scans through the PLayer object, including the Hand objects
+        it contains, looking for bets that exist. It tabulates all of the bets
+        and updates the Player.tatal_bets attribute with new amount.
+        INPUTS: none
+        OUTPUTS: none
+        """
+        # Initialize the bet total.
+        bet_total = 0
+        # First, we check the insurance bet, since it resides outside of the
+        # Hand objects. Objects and attributes are set to None when they do not
+        # exist.
+        if Player.insurance_bet:
+            bet_total += Player.insurance_bet
+        # Now, we check each hand to see if it exists. If so, it must have a
+        # bet attribute assigned to it.
+        for hand in ('one', 'two'):
+            if Player.hands[hand]:
+                bet_total += Player.hands[hand].bet_amt
+        Player.total_bets = bet_total
+
+    def update_bet(self, amt, which_hand='one', table_max=0):
+        """
+        This method takes the bet raise amount for a player's hand, the hand
+        to apply the bet to, and the maximum bet the table will allow and uses
+        these values to update the original bet on the hand and the player's
+        total bet amount. It will check to see if the raise amount will
+        break any rules, returning codes when this happens:
+            "success"   bet amount has been updated with a valide amount
+            "high"      amt exceeds the table max
+            "bet"       amt exceeds the original bet
+            "bank"      amt + total bets exceeds the player's bank
+        Note: Players cannot raise their bet on a given hand more than the
+            original amount they anted up before the cards are dealt.
+        Note: This method does not attempt to check the validity of a bet amt
+            against the player's bank and the table min.
+        INPUTS: There are 3 inputs:
+            amt (integer), required
+            which_hand (string, 'one' or 'two'), optional, defaults to 'one'
+            table_max (integer), optional, defaults to 0
+        OUTPUTS: string, values "success", "high", "low", or "bank"
+        """
+        # First, we check the new bet amount against the table_max. A zero
+        # tablem_mac will be ignored.
+        if (amt + self.hands[which_hand].bet) > table_max > 0:
+            return "high"
+        # Next, we check to make aure that bet is less than or equal to the
+        # original bet. This rules of blankjack do not allow raises to increase
+        # bets to more than double the original bet.
+        if amt > self.hands[which_hand].bet:
+            return "bet"
+        # Final check is to make sure that the amount of the raise will not
+        # exceed the player's bank if all bets are lost. The player's reserve
+        # is ignored.
+        if (amt + self.total_bets) > self.bank:
+            return "bank"
+        # Ok, the raise amt is valid. We need to add it to the original bet
+        # for this hand and, then, recalculate PLayer.total_bets.
+        self.hands[which_hand].bet += amt
+        self.total_bets()
+        return "success"
