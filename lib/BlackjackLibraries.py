@@ -786,6 +786,8 @@ class Player(object):
                 print("Remaining Bank: ${:,}".format(self.bank))
                 print("Cash Reserve: ${:,}".format(self.reserve))
                 print(f"Skill Level: {self.skill_level}")
+                if self.insurance_bet:
+                    print("Insurance bet: {:,}".format(self.insurance_bet))
                 if self.hands['one'] is not None:
                     print(self.hands['one'])
                 if self.hands['two'] is not None:
@@ -794,6 +796,14 @@ class Player(object):
                 print(f"Diagnostic printout for {self.name}")
                 print("Bank contains ${:,}, with a cash reserve of ${:,}.".format(self.bank, self.reserve))
                 print(f"Skill level is {self.skill_level}.")
+                if self.total_bets:
+                    print("Player's bet total: ${:,}".format(self.total_bets))
+                else:
+                    print("Total bets has not been populated.")
+                if self.insurance_bet:
+                    print("Insurance bet: ${:,}".format(self.insurance_bet))
+                else:
+                    print("No insurance bet exists.")
                 print("Players hands are:")
                 if self.hands['one'] is not None:
                     self.hands['one'].__str__(diagnostic=True)
@@ -935,7 +945,7 @@ class Player(object):
         self.create_split_hand(new_bet_amt, 'two', card_2)
         print("Your new split hand has been created.")
 
-    def update_total_bet(self):
+    def update_total_bets(self):
         """
         This method scans through the PLayer object, including the Hand objects
         it contains, looking for bets that exist. It tabulates all of the bets
@@ -948,14 +958,14 @@ class Player(object):
         # First, we check the insurance bet, since it resides outside of the
         # Hand objects. Objects and attributes are set to None when they do not
         # exist.
-        if Player.insurance_bet:
-            bet_total += Player.insurance_bet
+        if self.insurance_bet:
+            bet_total += self.insurance_bet
         # Now, we check each hand to see if it exists. If so, it must have a
         # bet attribute assigned to it.
         for hand in ('one', 'two'):
-            if Player.hands[hand]:
-                bet_total += Player.hands[hand].bet_amt
-        Player.total_bets = bet_total
+            if self.hands[hand] is not None:
+                bet_total += self.hands[hand].bet_amt
+        self.total_bets = bet_total
 
     def update_bet(self, amt, which_hand='one', table_max=0):
         """

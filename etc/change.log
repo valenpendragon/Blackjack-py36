@@ -48,4 +48,6 @@ This change log details bug fixes, changes, and files added to this project.
 
 2019-02-04 16:35: Removed a card/ace test from SplitHand.__init__() method that was causing the initialization to fail, even though valid Card and Ace objects were being supplied as arguments. Created Player.split_hand() method and fully tested it.
 
-2019-03-04 20:55: Built Player.update_bet() methos and Player.update_total_bet(). Code has not been tested yet.
+2019-03-04 20:55: Built	 Player.update_bet() methos and Player.update_total_bet(). Code has not been tested yet.
+
+2019-03-06 06:xx: Found a problem with diagnostic printing of Player objects that did not include all of the Player attributes during testing of the Player.update_bet() and Player.update_total_bets() methods. Fixed the missing functionality in Player.__str__() method and tested it. Fully tested Player.update_bet() and Player.update_total_bets().
