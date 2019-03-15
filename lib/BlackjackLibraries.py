@@ -759,15 +759,14 @@ class Player(object):
             self.skill_level = skill
         else:
             raise ValueError("Pleyer.__init__(): {0} is an invalid choice".format(skill))
-        # Reserve must be less than the bank or the player cannot play. In
-        # reality, it also needs to be small enough to allow the player to ante
-        # up at the start of their turn.
-        if reserve > bank - table_min:
-            raise ValueError("Player.__init__(): reserve is too large.")
+        # The bank amount cannot prevent the player from making their ante on
+        # the first hand.
+        if (bank - table_min) < 0:
+            raise ValueError("Player.__init__(): bank amount is too small.")
         else:
             self.bank = bank - reserve
             self.reserve = reserve
-        self.total_bets = None
+        self.total_bets = 0
         self.insurance_bet = None
         self.hands = {'one': None, 'two': None}
 
@@ -848,15 +847,77 @@ class Player(object):
         else:  # This is a Dealer object.
             print(f"The Dealer, {self.name} has been removed from the game.")
 
-    def create_hand(self, ante):
+    def validate_bet(self, amt, table_max, table_min):
+        """
+        This method takes a bet amount, table max, and table min, and makes the
+        following comparisons, returning the codes as indicated:
+            "passed"    amt passed all of this methods tests
+            "high"      amt exceeds the table max
+            "low"       amt is below the table min
+            "bank"      amt + total bets exceeds the player's bank
+            "invalid"   table min + total bets exceeds the player's bank OR
+                           total bets = player's bank
+        Note: This method can be used to check computer player validity using
+        the form P.validate_bet(0, table_max, table_min). Any return other
+        than "passed" indicates a character who cannot remain at the table.
+        INPUTS: There are 3 inputs:
+            amt (integer), required
+            table_max (integer), required
+            table_min (integer), required
+        OUTPUTS: string, values "passed", "high", "low", "bank", or "invalid"
+        """
+        # First, we need to pull Player.total_bets if it has been created.
+        # If not, we need to set this method's bet_total to zero.
+        if self.total_bets is None:
+            bet_total = 0
+        else:
+            bet_total = self.total_bets
+        # Next, we need to see if making this bet is even possible.
+        if bet_total == self.bank:
+            return "invalid"
+        if (table_min + bet_total) > self.bank:
+            return "invalid"
+        # Next, we check to make sure that the amount of the bet will not
+        # exceed the player's bank if all bets are lost.
+        if (amt + bet_total) > self.bank:
+            return "bank"
+        # Next, we check the bet amount against the table_max. A zero
+        # table_max will be ignored, since it makes the second test False.
+        if amt > table_max > 0:
+            return "high"
+        # Next, we check the bet amount against the table_min. A zero
+        # table_min will be ignored, since it makes the second test False.
+        if table_min > amt > 0:
+            return "low"
+        # If it got to this point, amt passed all of this methods tests.
+        return "passed"
+
+    def create_hand(self, ante, table_max=0, table_min=0):
         """
         This method creates an empty hand in Player.hands['one']. This is the
         computer player's regular hand. It requires an integer argument ante
-        as an initial bet for this hand.
-        INPUTS: ante, integer
-        OUTPUTS: nonw. All output is part of the changes to the PLeyer object.
+        as an initial bet for this hand. This method checks calls
+        Player.validate_bet to confirmed the following based on the return
+        code from the validation:
+            "success"   bet amount has been updated with a valide amount
+            "high"      amt exceeds the table max
+            "low"       amt is below the table min
+            "bank"      amt + total bets exceeds the player's bank
+            "invalid"   table min + total bets exceeds the player's bank OR
+                           total bets = player's bank
+        INPUTS: There are 3 inputs:
+            amt (integer), required
+            table_max (integer), optional, defaults to 0
+            table_min (integer), optional, defaults to 0
+        OUTPUTS: string, values "success", "high", "low", "bank", or "invalid"
         """
-        self.hands['one'] = Hand(ante)
+        validation = self.validate_bet(ante, table_max, table_min)
+        if validation == "passed":
+            self.hands['one'] = Hand(ante)
+            self.update_total_bets()
+            return "success"
+        else:
+            return validation
 
     def create_split_hand(self, ante, which_hand, start_card):
         """
@@ -868,8 +929,12 @@ class Player(object):
         INPUTS: ante, integer (required), which_hand, string (required, must
             be either 'one' or 'two'), start_card, Card or Ace (required)
         OUTPUTS: none. All changes take place inside the Player object.
+        Note: This method does not check the validity of the new ante amount.
+            It relies on the calling method(s) to validate the amount before
+            invoking this method.
         """
         self.hands[which_hand] = SplitHand(start_card, ante)
+        self.update_total_bets()
 
     def add_card_to_hand(self, card, which_hand='one'):
         """
@@ -900,50 +965,110 @@ class Player(object):
         # False.
         return False
 
-    def split_hand(self, table_max=0):
+    def split_hand(self, table_max=0, table_min=0):
         """
+        This method determines if the computer player can actually make another
+        ante on a new hand first, using Player.validate_bet(). If "invalid" is
+        returned, it warn the human player that no split hand be created due to
+        the table min and the computer player's remaining bank. If it gets
+        past that point, it will ask the human player if they want to split
+        the pair that is showing into two hands. If not, it will return the
+        code "declined". If so, the method coverts the pair into split hands.
         This method removes the original hand, separates the pair of cards,
         creates a new SplitHand in hands['one'] and copies over the original
         bet to that hand. Next, it takes the second card in the pair, prompts
         the User for a bet on this player's new split hand, and creates a new
         SplitHand from the second card and bet amount in the hands['two']
-        position.
-        INPUTS: table_max, integer (optional, defaults to 0). User is promppted
-            for a second integer value as a bet on the new split hand.
-        OUTPUTS: None. All changes take place within the PLayer object's hands.
+        position. It calls Player.validate_bet() to check the validity of the
+        bet while interacting with the human player. If it is not possible
+        INPUTS: two optional integers
+            table_max (integer), optional (defaults to 0)
+            table_min (integer), optional (defaults to 0)
+            User is promppted for an integer value as a bet on the new split
+                hand if the computer player can make such a bet.
+        OUTPUTS: string with volues as follows:
+            "success"     the pair was split into two hands and both have bets
+            "declined"    the player declined to split the pair
+            "impossible"  the player's bank could not cover the table min for
+                            the new hand
         """
-        # First, we need to pull some of the data from the original hand. We
-        # need the bet amount and both cards.
+        # First, we need to check to see if the computer player's bank has
+        # enough money in it to cover the table minimum. We can do that using
+        # the Player.validate_bet() method.
+        result = self.validate_bet(0, table_max, table_min)
+        if result == "passed":
+            print(f"Player {self.name} can cover a new bet for a split hand.")
+        else:
+            print(f"Player {self.name} cannot cover the bet for a split hand.")
+            return "impossible"
+        # The computer player can cover a bet on the new hand. So, we need to
+        # ask the human player if they want ot split the pair.
+        answer = ""
+        while answer not in ('y', 'n'):
+            answer = input("Would you like to split the pair into new hands? (yes/no)").lower()[0]
+            if answer not in ('y', 'n'):
+                print("Invalid response. Please answer yes/no or y/n.")
+                print("This game ignores copitalization")
+                continue
+            elif answer == 'y':
+                break
+            else:  # answer = 'n'
+                print("Spilting the pair has been declined.")
+                return "declined"
+        # The pair will be split into two hands. We need to extract the
+        # following data from the original hand: the bet amount and both cards.
         orig_bet = self.hands['one'].bet_amt
         card_1 = self.hands['one'].cards[0]
         card_2 = self.hands['one'].cards[1]
         # Now, we need to create the first split hand.
         self.create_split_hand(orig_bet, 'one', card_1)
         # Before we can make the second split hand, we need a bet amount for
-        # it. We will prompt the User for the amount, checking it against the
-        # table_max.
+        # it. We will prompt the User for the amount, then run the method
+        # Player.validate_bet() to make sure that the player's bet is not
+        # incorrect.
         while True:
-            # First, we prompt the User. If the table_max is set, it will
-            # remind the user of this amount.
+            # The human player may need a reminder of the table min and max, if
+            # they exist. So, we will check for them and print reminders.
             if table_max != 0:
                 print(f"The maximum bet at this table is ${table_max}.")
-            answer = input("Please enter a bet for the new hand: ")
+            else:
+                print("There is no maximum bet at this table.")
+            if table_min != 0:
+                print(f"The minimum bet at this table is ${table_min}.")
+            else:
+                print("There is no minimum bet at this table.")
+            new_bet = input("Please enter a bet for the new hand: ")
             # Since the User might enter a non-integer, we need to check the
             # data type.
             try:
-                new_bet_amt = int(answer)
+                new_bet_amt = int(new_bet)
             except TypeError:
-                print(f"{answer} is an invalid number.")
+                print(f"{new_bet} is not a number.")
                 continue
             else:
-                if new_bet_amt >= table_max > 0:
-                    print(f"${new_bet_amt} is more than the table maximum of ${table_max}.")
-                    print("Please try again.")
-                    continue
-            break
-        # We can create the second split hand now.
+                # Now, we need to run Player.validate_bet() to see if this bet
+                # is valid or not. The possible results are "passed", "high",
+                # "low", "bank", or "invalid". "invalid" bets do not take the
+                # new bet into consideration and were tested for at the
+                # beginning of this method.
+                result = self.validate_bet(new_bet_amt, table_max, table_min)
+                if result == "passed":
+                    break
+                elif result == 'high':
+                    print(f"${new_bet_amt} is more than the table maximum bet.")
+                elif result == 'low':
+                    print(f"${new_bet_amt} is less than the table minimum bet.")
+                elif result == 'bank':
+                    print(f"${new_bet_amt} would overrun your available bank of ${self.bank}.")
+                # No other results are possible.
+            # Since it got to this point, the bet amount needs to be reentered.
+            print("Please try again.")
+        # Now that we are out of the while loop, We can create the second
+        # split hand now. Then, we will update the total bets attribute.
         self.create_split_hand(new_bet_amt, 'two', card_2)
+        self.update_total_bets()
         print("Your new split hand has been created.")
+        return "success"
 
     def update_total_bets(self):
         """
@@ -967,43 +1092,78 @@ class Player(object):
                 bet_total += self.hands[hand].bet_amt
         self.total_bets = bet_total
 
-    def update_bet(self, amt, which_hand='one', table_max=0):
+    def update_bet(self, amt, which_hand='one', table_max=0, table_min=0):
         """
-        This method takes the bet raise amount for a player's hand, the hand
-        to apply the bet to, and the maximum bet the table will allow and uses
-        these values to update the original bet on the hand and the player's
-        total bet amount. It will check to see if the raise amount will
-        break any rules, returning codes when this happens:
-            "success"   bet amount has been updated with a valide amount
-            "high"      amt exceeds the table max
-            "bet"       amt exceeds the original bet
-            "bank"      amt + total bets exceeds the player's bank
+        This method validates the ammount that a bet has been raised. If it is
+        an amount that meets the rules, it apply the change and return
+        "success". It uses the method Player.validate_bet to determine if the
+        raise amount causes any problems, returning the code it gets back
+        generally. There is an extra check that it makes, determining if the
+        raise is more than double the original bet amount, as this breaks the
+        rules of blackjack.
+        This method calls Player.validate_bet() to perform all, but the raise
+        amount test.
         Note: Players cannot raise their bet on a given hand more than the
             original amount they anted up before the cards are dealt.
-        Note: This method does not attempt to check the validity of a bet amt
-            against the player's bank and the table min.
+        Note: To test if the player can raise or make a bet currently, use
+            the form Player.update_bet(0, hand, table_max, table_min).
         INPUTS: There are 3 inputs:
             amt (integer), required
             which_hand (string, 'one' or 'two'), optional, defaults to 'one'
             table_max (integer), optional, defaults to 0
-        OUTPUTS: string, values "success", "high", "low", or "bank"
+            table_min (integer), optional, defaults to 0
+        OUTPUTS: string, values are:
+            "success"   bet amount has been updated with a valid amount
+            "high"      amt + current bet exceeds the table max
+            "bet"       amt exceeds the original bet
+            "bank"      amt + total bets exceeds the player's bank
+            "invalid"   table min + total bets exceeds the player's bank OR
+                           total bets = player's bank
         """
-        # First, we check the new bet amount against the table_max. A zero
-        # tablem_mac will be ignored.
-        if (amt + self.hands[which_hand].bet) > table_max > 0:
-            return "high"
-        # Next, we check to make aure that bet is less than or equal to the
-        # original bet. This rules of blankjack do not allow raises to increase
-        # bets to more than double the original bet.
-        if amt > self.hands[which_hand].bet:
+        raised_bet = amt + self.hands[which_hand].bet_amt
+        # Player.validate_bet() generates the following return values:
+        # "passed", "high", "low", "bank", or "invalid". This will cover most
+        # of the conditions that we might run into. A "low" result is not
+        # possible simply because the hand already had a valid bet on it before
+        # the option to raise the bet came along. "invalid" is also not a
+        # possible return because, again, there is a valid bet and "invalid"
+        # would have prevented the play from getting this far.
+        result = self.validate_bet(raised_bet, table_max, table_min)
+        if result != "passed":
+            return result
+        # Now, it is possible that the player kept the value under the table
+        # maximum, but it is still too high because it is more than double the
+        # ante (original bet). Blackjack forbids that.
+        if amt > self.hands[which_hand].bet_amt:
             return "bet"
-        # Final check is to make sure that the amount of the raise will not
-        # exceed the player's bank if all bets are lost. The player's reserve
-        # is ignored.
-        if (amt + self.total_bets) > self.bank:
-            return "bank"
         # Ok, the raise amt is valid. We need to add it to the original bet
         # for this hand and, then, recalculate PLayer.total_bets.
-        self.hands[which_hand].bet += amt
-        self.total_bets()
+        self.hands[which_hand].bet_amt += amt
+        self.update_total_bets()
         return "success"
+
+    def create_insurance_bet(self, amt, table_max=0, table_min=0):
+        """
+        Insurance bets are subject to the table max and min values, just like
+        any other bet. So, we can use Player.validate_bet to check if this amt
+        meets the criteria. The codes this method returns are the same as the
+        ones it gets from Player.validate_bet() if the bet is a bad amount.
+        INPUTS: There are 3 inputs:
+            amt (integer), required
+            table_max (integer), optional, defaults to 0
+            table_min (integer), optional, defaults to 0
+        OUTPUTS: string, values are as follows:
+            "success"   bet amount has been updated with a valide amount
+            "high"      amt exceeds the table max
+            "low"       amt is below the table min
+            "bank"      amt + total bets exceeds the player's bank
+            "invalid"   table min + total bets exceeds the player's bank OR
+                           total bets = player's bank
+        """
+        result = self.validate_bet(amt, table_max, table_min)
+        if result != "passed":
+            return result
+        else:
+            self.insurance_bet = amt
+            self.update_total_bets()
+            return "success"
