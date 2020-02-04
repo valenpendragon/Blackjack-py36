@@ -1167,3 +1167,57 @@ class Player(object):
             self.insurance_bet = amt
             self.update_total_bets()
             return "success"
+
+    def clear_hand(self, which_hand):
+        """
+        This method checks to see if the specified hand exists. If so, it will
+        attempt to set it None. Successful removal of the specified hand is
+        returned via a code string. A nonexistent hand will return a code as
+        well. An invalid hand choice also returns a code.
+        Note: This method is needed for end_round().
+        INPUTS: which_hand (string), valid values are 'one' or 'two', no
+            default value
+        OUTPUTS: string, values are as follows:
+            'missing'    hand specified did not exist
+            'invalid'    hand specified is not 'one' or 'two'
+            'success'    hand was found and set to None
+        """
+        if which_hand != 'one' or which_hand != 'two':
+            return 'invalid'
+        if self.hands[which_hand] is None:
+            return 'missing'
+        # Getting to this point means that the hand exists. We need to set it
+        # to None.
+        self.hands[which_hand] = None
+        # A failure to reomve the hand should not happen, but we handle this
+        # slim possibility just in case.
+        if self.hands[which_hand] is None:
+            return 'success'
+        else:
+            return 'failure'
+
+    def end_round(self, table_min=0):
+        """
+        This method clears the player objects hands, total_bets, and insurance
+        bet (if any still exist). After that is done, this method calls the
+        validate_bet(0, 0, table_min) to determine if the player can continue
+        to the next round. If not, it returns False; if so, it returns True.
+        INPUTS: table_min (integer), no default value
+        OUTPUTS: boolean, True (player can continue), False (player will be
+           eliminated if not withdrawn)
+        Note: This method does not prompt the human player to perform any
+            actions. Drawing from the player's reserve or withdrawing this
+            player from the table is left to other code.
+        """
+        for hand in ('one', 'two'):
+            self.clear_hand(hand)
+        # We do not need the codes here since we are simply clearing data.
+        self.insurance_bet = None
+        self.total_bets = 0
+        # All of these attributes have been reset. Now, we need to check the
+        # validity of the player. Player.validate_bet() has a form that will
+        # return 'passed' or 'invalid' if the player cannot meet table mins.
+        if self.validate_bet(0, 0, table_min) == 'passed':
+            return True
+        else:
+            return False

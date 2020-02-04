@@ -57,8 +57,10 @@ Player.create_insurance_bet(), and Player.create_split_hand().
 
 2019-03-15 xx:xx: Started work on the following methods:
 
-Player.end_round()
+Player.end_round() <--- coded
 Player.black_jack()
 Player.resolve_hand()
-Player.clear_hand()
+Player.clear_hand() <---- coded
 Player.resolve_ins_bet()
+
+2020-02-04 12:20; The last commit never happened. This is a final commit to archive this version of the project. I am keeping the work done thus far, but a reorganization of the libraries is needed to make them less unwieldy. It will also make it easier for other developers to use just the pieces they want, like Textbox for pygama.
